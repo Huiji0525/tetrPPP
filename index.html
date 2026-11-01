@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TETR.IO Style - 多人即時對戰競技場</title>
+    <title>TETR.IO Style - 多人即時對戰競技場bo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         .glow-text { text-shadow: 0 0 12px rgba(14, 165, 233, 0.6); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-between p-4">
+<body class="min-h-screen flex flex-col items-center justify-between p-4 relative">
 
     <!-- Header -->
     <header class="w-full max-w-7xl text-center py-2">
@@ -26,7 +26,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="w-full max-w-7xl flex-1 flex flex-col items-center justify-center">
+    <main class="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative">
 
         <!-- 大廳畫面 -->
         <div id="lobby-screen" class="w-full max-w-md bg-slate-900/90 backdrop-blur p-6 rounded-2xl glow-box text-center space-y-6">
@@ -66,7 +66,7 @@
             </button>
         </div>
 
-        <!-- 遊戲對戰主畫面 (模擬 TETR.IO 左右配置) -->
+        <!-- 遊戲對戰主畫面 -->
         <div id="game-arena" class="hidden flex flex-col md:flex-row gap-6 items-start justify-center w-full">
             
             <!-- 左側：個人保留區與狀態 -->
@@ -115,6 +115,20 @@
 
     </main>
 
+    <!-- 遊戲結束結算彈窗 (預設隱藏) -->
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl glow-box text-center space-y-6 max-w-sm w-full mx-4 animate-scale-up">
+            <h2 class="font-orbitron text-3xl font-black text-red-500 glow-text">GAME OVER</h2>
+            <div class="space-y-2 text-gray-300 text-sm">
+                <p>最終得分：<strong id="final-score" class="text-cyan-400 text-lg">0</strong></p>
+                <p>總共消除：<strong id="final-lines" class="text-white">0</strong> 行</p>
+            </div>
+            <button onclick="restartGame()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold rounded-xl shadow-lg transition cursor-pointer text-white">
+                重新開始 (Restart)
+            </button>
+        </div>
+    </div>
+
     <footer class="w-full max-w-7xl text-center py-2 text-xs text-gray-500">
         TETR.IO Arena &copy; 2026
     </footer>
@@ -161,14 +175,33 @@
             player.pos.x = ((COLS / 2) | 0) - ((player.matrix[0].length / 2) | 0);
             canHold = true;
             if (checkCollision(board, player)) {
-                gameOver = true;
-                gameStarted = false;
-                alert("遊戲結束！");
+                triggerGameOver();
             }
         }
 
+        function triggerGameOver() {
+            gameOver = true;
+            gameStarted = false;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-lines').innerText = lines;
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-modal').classList.add('hidden');
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            score = 0; lines = 0; gameOver = false; heldPiece = null;
+            document.getElementById('my-score').innerText = 0;
+            document.getElementById('my-lines').innerText = 0;
+            drawHold();
+            resetPlayer();
+            gameStarted = true;
+            lastTime = performance.now();
+            requestAnimationFrame(update);
+        }
+
         function holdPieceAction() {
-            if (!canHold) return;
+            if (!canHold || gameOver || !gameStarted) return;
             if (!heldPiece) {
                 heldPiece = player.type;
                 resetPlayer();
@@ -242,7 +275,6 @@
                 document.getElementById('my-score').innerText = score;
                 document.getElementById('my-lines').innerText = lines;
 
-                // TETR.IO 風格攻擊發送邏輯
                 let attackLines = 0;
                 if (rowCount === 2) attackLines = 1;
                 else if (rowCount === 3) attackLines = 2;
@@ -258,9 +290,9 @@
         function addGarbageLines(num) {
             for (let i = 0; i < num; i++) {
                 board.shift();
-                const garbageRow = Array(COLS).fill(8); // 8 代表灰色垃圾行
+                const garbageRow = Array(COLS).fill(8);
                 let hole = Math.floor(Math.random() * COLS);
-                garbageRow[hole] = 0; // 留一個洞
+                garbageRow[hole] = 0;
                 board.push(garbageRow);
             }
         }
@@ -400,7 +432,6 @@
                     broadcastExcept(conn.peer, { type: 'opponents_state', players: playersInfo });
                     updateOpponentsUI();
                 } else if (data.type === 'garbage') {
-                    // 房主收到攻擊，隨機轉發給其他對手
                     broadcastExcept(conn.peer, { type: 'garbage', lines: data.lines });
                 }
             });
@@ -470,6 +501,7 @@
         function startGameSession() {
             document.getElementById('waiting-room').classList.add('hidden');
             document.getElementById('game-arena').classList.remove('hidden');
+            document.getElementById('game-over-modal').classList.add('hidden');
             board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
             score = 0; lines = 0; gameOver = false; heldPiece = null;
             document.getElementById('my-score').innerText = 0;
@@ -495,7 +527,6 @@
         function sendGarbage(numLines) {
             const payload = { type: 'garbage', lines: numLines };
             if (isHost) {
-                // 房主發送攻擊給其他連線者
                 broadcast(payload);
             } else if (hostConnection && hostConnection.open) {
                 hostConnection.send(payload);
@@ -505,7 +536,6 @@
         function updateOpponentsUI() {
             const container = document.getElementById('opponents-container');
             container.innerHTML = '';
-            const myId = isHost ? (peer ? peer.id : '') : (peer ? peer.id : '');
             
             Object.keys(playersInfo).forEach(id => {
                 if (id !== (peer ? peer.id : '')) {
