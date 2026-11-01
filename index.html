@@ -78,7 +78,7 @@
         <!-- GAME ARENA -->
         <div id="game-arena" class="hidden flex flex-col md:flex-row gap-6 items-center justify-center w-full">
             
-            {/* Player Board */}
+            <!-- Player Board -->
             <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center">
                 <h3 id="my-name-display" class="font-bold text-cyan-400 mb-2">我方</h3>
                 <div class="relative">
@@ -90,7 +90,7 @@
                 </div>
             </div>
 
-            {/* VS Divider / Controls Info */}
+            <!-- VS Divider / Controls Info -->
             <div class="flex flex-col items-center justify-center space-y-4">
                 <div class="font-orbitron text-3xl font-black text-red-500 animate-pulse">VS</div>
                 <div class="text-xs text-gray-400 bg-slate-800/80 p-3 rounded-xl text-center space-y-1">
@@ -102,7 +102,7 @@
                 <button onclick="leaveGame()" class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-xs font-bold rounded-lg transition">離開對戰</button>
             </div>
 
-            {/* Opponent Board */}
+            <!-- Opponent Board -->
             <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center">
                 <h3 id="opponent-name-display" class="font-bold text-red-400 mb-2">對手</h3>
                 <div class="relative">
@@ -222,7 +222,6 @@
                 document.getElementById('my-score').innerText = score;
                 document.getElementById('my-lines').innerText = lines;
 
-                // 如果消除2行以上，發送垃圾行給對手
                 if (rowCount >= 2 && conn && conn.open) {
                     conn.send({ type: 'garbage', lines: rowCount - 1 });
                 }
@@ -233,8 +232,7 @@
         function addGarbageLines(num) {
             for (let i = 0; i < num; i++) {
                 board.shift();
-                const garbageRow = Array(COLS).fill(8); // 8 代表垃圾灰色
-                // 隨機留一個缺口
+                const garbageRow = Array(COLS).fill(8);
                 let hole = Math.floor(Math.random() * COLS);
                 garbageRow[hole] = 0;
                 board.push(garbageRow);
@@ -315,7 +313,6 @@
             requestAnimationFrame(update);
         }
 
-        // --- P2P Network Logic ---
         function initPeer(customId = null) {
             playerName = document.getElementById('player-name-input').value || "玩家";
             peer = new Peer(customId);
@@ -343,7 +340,6 @@
 
         function createRoom() {
             isHost = true;
-            // 隨機產生 6 位數房間碼
             const randomId = 'TB' + Math.random().toString(36).substring(2, 8).toUpperCase();
             initPeer(randomId);
         }
@@ -434,7 +430,6 @@
             location.reload();
         }
 
-        // Controls
         document.addEventListener('keydown', event => {
             if (!gameStarted || gameOver) return;
             if (event.key === 'ArrowLeft') {
