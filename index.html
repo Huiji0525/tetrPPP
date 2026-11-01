@@ -6,7 +6,7 @@
     <title>多人連線俄羅斯方塊對戰 (Tetris Battle)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Orbitron & Inter -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
     <!-- PeerJS for P2P Realtime Multiplayer -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -78,7 +78,6 @@
         <!-- GAME ARENA -->
         <div id="game-arena" class="hidden flex flex-col md:flex-row gap-6 items-center justify-center w-full">
             
-            <!-- Player Board -->
             <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center">
                 <h3 id="my-name-display" class="font-bold text-cyan-400 mb-2">我方</h3>
                 <div class="relative">
@@ -90,7 +89,6 @@
                 </div>
             </div>
 
-            <!-- VS Divider / Controls Info -->
             <div class="flex flex-col items-center justify-center space-y-4">
                 <div class="font-orbitron text-3xl font-black text-red-500 animate-pulse">VS</div>
                 <div class="text-xs text-gray-400 bg-slate-800/80 p-3 rounded-xl text-center space-y-1">
@@ -102,7 +100,6 @@
                 <button onclick="leaveGame()" class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-xs font-bold rounded-lg transition">離開對戰</button>
             </div>
 
-            <!-- Opponent Board -->
             <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center">
                 <h3 id="opponent-name-display" class="font-bold text-red-400 mb-2">對手</h3>
                 <div class="relative">
@@ -118,12 +115,10 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="w-full max-w-4xl text-center py-2 text-xs text-gray-500">
         Tetris Battle P2P Engine &copy; 2026
     </footer>
 
-    <!-- Game Logic Script -->
     <script>
         let peer = null;
         let conn = null;
@@ -133,7 +128,6 @@
 
         document.getElementById('player-name-input').value = playerName;
 
-        // Tetris Constants
         const COLS = 10, ROWS = 20, BLOCK_SIZE = 20;
         let canvas = document.getElementById('my-board');
         let ctx = canvas.getContext('2d');
@@ -148,22 +142,19 @@
 
         const SHAPES = [
             [],
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-            [[2,0,0],[2,2,2],[0,0,0]], // J
-            [[0,0,3],[3,3,3],[0,0,0]], // L
-            [[4,4],[4,4]], // O
-            [[0,5,5],[5,5,0],[0,0,0]], // S
-            [[0,6,0],[6,6,6],[0,0,0]], // T
-            [[7,7,0],[0,7,7],[0,0,0]]  // Z
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+            [[2,0,0],[2,2,2],[0,0,0]],
+            [[0,0,3],[3,3,3],[0,0,0]],
+            [[4,4],[4,4]],
+            [[0,5,5],[5,5,0],[0,0,0]],
+            [[0,6,0],[6,6,6],[0,0,0]],
+            [[7,7,0],[0,7,7],[0,0,0]]
         ];
 
         const COLORS = ['#000', '#06b6d4', '#3b82f6', '#f97316', '#eab308', '#22c55e', '#a855f7', '#ef4444'];
-
         let player = { pos: { x: 0, y: 0 }, matrix: null, score: 0 };
 
-        function createPiece(type) {
-            return SHAPES[type];
-        }
+        function createPiece(type) { return SHAPES[type]; }
 
         function resetPlayer() {
             const pieces = '1234567';
@@ -196,10 +187,8 @@
         function mergeBoard(b, p) {
             p.matrix.forEach((row, r) => {
                 row.forEach((value, c) => {
-                    if (value !== 0) {
-                        if (p.pos.y + r >= 0) {
-                            b[p.pos.y + r][p.pos.x + c] = value;
-                        }
+                    if (value !== 0 && p.pos.y + r >= 0) {
+                        b[p.pos.y + r][p.pos.x + c] = value;
                     }
                 });
             });
@@ -221,7 +210,6 @@
                 score += rowCount * 100 * rowCount;
                 document.getElementById('my-score').innerText = score;
                 document.getElementById('my-lines').innerText = lines;
-
                 if (rowCount >= 2 && conn && conn.open) {
                     conn.send({ type: 'garbage', lines: rowCount - 1 });
                 }
@@ -272,9 +260,7 @@
 
         function playerMove(dir) {
             player.pos.x += dir;
-            if (checkCollision(board, player)) {
-                player.pos.x -= dir;
-            }
+            if (checkCollision(board, player)) { player.pos.x -= dir; }
         }
 
         function drawMatrix(matrix, offset, context) {
@@ -292,9 +278,7 @@
             ctx.fillStyle = '#020617';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             drawMatrix(board, { x: 0, y: 0 }, ctx);
-            if (player.matrix) {
-                drawMatrix(player.matrix, player.pos, ctx);
-            }
+            if (player.matrix) { drawMatrix(player.matrix, player.pos, ctx); }
 
             oppCtx.fillStyle = '#020617';
             oppCtx.fillRect(0, 0, oppCanvas.width, oppCanvas.height);
@@ -306,9 +290,7 @@
             const deltaTime = time - lastTime;
             lastTime = time;
             dropCounter += deltaTime;
-            if (dropCounter > dropInterval) {
-                playerDrop();
-            }
+            if (dropCounter > dropInterval) { playerDrop(); }
             draw();
             requestAnimationFrame(update);
         }
@@ -316,7 +298,6 @@
         function initPeer(customId = null) {
             playerName = document.getElementById('player-name-input').value || "玩家";
             peer = new Peer(customId);
-
             peer.on('open', (id) => {
                 if (isHost) {
                     roomCode = id.substring(0, 6).toUpperCase();
@@ -326,16 +307,8 @@
                     document.getElementById('member-list').innerText = `${playerName} (房主)`;
                 }
             });
-
-            peer.on('connection', (connection) => {
-                conn = connection;
-                setupConnection();
-            });
-
-            peer.on('error', (err) => {
-                alert("連線發生錯誤：" + err.type);
-                document.getElementById('lobby-status').innerText = "連線失敗，請重試";
-            });
+            peer.on('connection', (connection) => { conn = connection; setupConnection(); });
+            peer.on('error', (err) => { alert("連線發生錯誤：" + err.type); });
         }
 
         function createRoom() {
@@ -347,18 +320,11 @@
         function joinRoom() {
             isHost = false;
             const inputCode = document.getElementById('room-code-input').value.trim().toUpperCase();
-            if (!inputCode) {
-                alert("請輸入房間代碼！");
-                return;
-            }
+            if (!inputCode) { alert("請輸入房間代碼！"); return; }
             playerName = document.getElementById('player-name-input').value || "玩家";
             document.getElementById('lobby-status').innerText = "正在連線到房間...";
-
             peer = new Peer();
-            peer.on('open', () => {
-                conn = peer.connect(inputCode);
-                setupConnection();
-            });
+            peer.on('open', () => { conn = peer.connect(inputCode); setupConnection(); });
         }
 
         function setupConnection() {
@@ -368,12 +334,8 @@
                 document.getElementById('display-room-code').innerText = conn.peer;
                 document.getElementById('member-list').innerText = `已成功連線對手！`;
                 conn.send({ type: 'join', name: playerName });
-
-                if (isHost) {
-                    document.getElementById('start-btn').classList.remove('hidden');
-                }
+                if (isHost) { document.getElementById('start-btn').classList.remove('hidden'); }
             });
-
             conn.on('data', (data) => {
                 if (data.type === 'join') {
                     document.getElementById('member-list').innerText = `玩家: ${data.name} 已加入`;
@@ -387,11 +349,7 @@
                     addGarbageLines(data.lines);
                 }
             });
-
-            conn.on('close', () => {
-                alert("對手已斷線");
-                leaveGame();
-            });
+            conn.on('close', () => { alert("對手已斷線"); leaveGame(); });
         }
 
         function copyRoomCode() {
@@ -421,33 +379,19 @@
         }
 
         function sendState() {
-            if (conn && conn.open) {
-                conn.send({ type: 'state', board: board, score: score });
-            }
+            if (conn && conn.open) { conn.send({ type: 'state', board: board, score: score }); }
         }
 
-        function leaveGame() {
-            location.reload();
-        }
+        function leaveGame() { location.reload(); }
 
         document.addEventListener('keydown', event => {
             if (!gameStarted || gameOver) return;
-            if (event.key === 'ArrowLeft') {
-                playerMove(-1);
-                sendState();
-            } else if (event.key === 'ArrowRight') {
-                playerMove(1);
-                sendState();
-            } else if (event.key === 'ArrowDown') {
-                playerDrop();
-                sendState();
-            } else if (event.key === 'ArrowUp') {
-                playerRotate();
-                sendState();
-            } else if (event.key === ' ') {
-                while (!checkCollision(board, player)) {
-                    player.pos.y++;
-                }
+            if (event.key === 'ArrowLeft') { playerMove(-1); sendState(); }
+            else if (event.key === 'ArrowRight') { playerMove(1); sendState(); }
+            else if (event.key === 'ArrowDown') { playerDrop(); sendState(); }
+            else if (event.key === 'ArrowUp') { playerRotate(); sendState(); }
+            else if (event.key === ' ') {
+                while (!checkCollision(board, player)) { player.pos.y++; }
                 player.pos.y--;
                 mergeBoard(board, player);
                 clearLines();
