@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多人彈性房間俄羅斯方塊對戰 (Tetris Battle P2P)</title>
+    <title>TETRIS 專業對戰介面</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -20,102 +20,142 @@
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
 
     <!-- Header -->
-    <header class="w-full max-w-4xl text-center py-4">
-        <h1 class="font-orbitron text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 glow-text">
-            TETRIS BATTLE P2P
+    <header class="w-full max-w-5xl text-center py-2">
+        <h1 class="font-orbitron text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 glow-text tracking-wider">
+            TETRIS
         </h1>
-        <p class="text-gray-400 text-sm mt-1">多人連線對戰系統・支援彈性房間人數</p>
     </header>
 
     <!-- Main Container -->
-    <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center">
+    <main class="w-full max-w-5xl flex-1 flex flex-col items-center justify-center">
 
-        <!-- LOBBY SCREEN -->
-        <div id="lobby-screen" class="w-full max-w-md bg-slate-900/80 backdrop-blur p-6 rounded-2xl glow-box text-center space-y-6">
-            <h2 class="font-orbitron text-xl font-bold text-cyan-400">遊戲大廳</h2>
-            
+        <!-- 初始大廳 (未加入遊戲前顯示) -->
+        <div id="lobby-screen" class="w-full max-w-md bg-slate-900/90 backdrop-blur p-6 rounded-2xl glow-box text-center space-y-6">
+            <h2 class="font-orbitron text-xl font-bold text-cyan-400">多人連線大廳</h2>
             <div class="space-y-3">
                 <input type="text" id="player-name-input" placeholder="輸入你的暱稱" maxlength="10" 
                     class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-center font-bold text-white focus:outline-none focus:border-cyan-400">
-                
-                <!-- 房間人數上限選擇 -->
-                <div class="flex items-center justify-between bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
-                    <span class="text-sm text-gray-300">房間人數上限:</span>
-                    <select id="max-players-select" class="bg-slate-900 text-cyan-400 font-bold px-3 py-1 rounded-lg focus:outline-none border border-slate-600">
-                        <option value="2">2 人對戰</option>
-                        <option value="3">3 人混戰</option>
-                        <option value="4">4 人混戰</option>
-                    </select>
-                </div>
-
-                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold rounded-xl shadow-lg transition transform active:scale-95">
+                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold rounded-xl shadow-lg transition">
                     創建新房間
                 </button>
             </div>
-
-            <div class="flex items-center my-4">
+            <div class="flex items-center my-2">
                 <div class="flex-grow border-t border-slate-700"></div>
                 <span class="px-3 text-gray-500 text-sm">或者加入房間</span>
                 <div class="flex-grow border-t border-slate-700"></div>
             </div>
-
             <div class="space-y-3">
-                <input type="text" id="room-code-input" placeholder="輸入房主提供的房間代碼" 
+                <input type="text" id="room-code-input" placeholder="輸入房間代碼" 
                     class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-center font-mono font-bold text-white uppercase focus:outline-none focus:border-cyan-400">
-                <button onclick="joinRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold rounded-xl transition transform active:scale-95">
+                <button onclick="joinRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold rounded-xl transition">
                     加入房間
                 </button>
             </div>
-
             <p id="lobby-status" class="text-sm text-yellow-400 h-6"></p>
         </div>
 
-        <!-- WAITING ROOM -->
-        <div id="waiting-room" class="hidden w-full max-w-md bg-slate-900/80 backdrop-blur p-6 rounded-2xl glow-box text-center space-y-6">
-            <h2 class="font-orbitron text-xl font-bold text-cyan-400">等待玩家加入</h2>
+        <!-- 等待畫面 -->
+        <div id="waiting-room" class="hidden w-full max-w-md bg-slate-900/90 backdrop-blur p-6 rounded-2xl glow-box text-center space-y-6">
+            <h2 class="font-orbitron text-xl font-bold text-cyan-400">等待對手加入</h2>
             <div class="p-4 bg-slate-800 rounded-xl">
-                <p class="text-xs text-gray-400">你的房間代碼 (點擊可複製)</p>
-                <span id="display-room-code" onclick="copyRoomCode()" class="font-mono text-2xl font-black text-yellow-400 cursor-pointer tracking-wider">------</span>
+                <p class="text-xs text-gray-400">房間代碼 (點擊可複製)</p>
+                <span id="display-room-code" onclick="copyRoomCode()" class="font-mono text-2xl font-black text-yellow-400 cursor-pointer">------</span>
             </div>
-            <div id="room-members" class="text-sm text-gray-300 space-y-1">
-                <p class="font-bold text-cyan-400 mb-1">已連線成員：</p>
-                <ul id="member-list" class="space-y-1 text-gray-200">等待中...</ul>
-            </div>
+            <div id="member-list" class="text-sm text-gray-300">等待中...</div>
             <button id="start-btn" onclick="startMultiplayerGame()" class="hidden w-full py-3 bg-green-600 hover:bg-green-500 font-bold rounded-xl shadow-lg transition">
                 開始對戰！
             </button>
         </div>
 
-        <!-- GAME ARENA -->
-        <div id="game-arena" class="hidden flex flex-col md:flex-row gap-6 items-center justify-center w-full">
+        <!-- 遊戲主畫面 (完全對齊你提供的精美排版) -->
+        <div id="game-arena" class="hidden flex flex-col md:flex-row gap-6 items-start justify-center w-full">
             
-            <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center">
-                <h3 id="my-name-display" class="font-bold text-cyan-400 mb-2">我方</h3>
-                <div class="relative">
-                    <canvas id="my-board" width="200" height="400" class="bg-slate-950 border border-slate-700 rounded"></canvas>
+            <!-- 左側欄：玩家資訊、保留方塊、靈敏度、音效 -->
+            <div class="flex flex-col gap-4 w-full md:w-64">
+                <!-- 目前玩家 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box text-center">
+                    <div class="text-xs text-gray-400 mb-1">目前玩家</div>
+                    <div id="my-name-display" class="font-bold text-yellow-400 text-lg">Guest</div>
                 </div>
-                <div class="flex justify-between w-full mt-3 text-xs text-gray-400 px-1">
-                    <span>分數: <strong id="my-score" class="text-white">0</strong></span>
-                    <span>消除: <strong id="my-lines" class="text-white">0</strong> 行</span>
+
+                <!-- 保留 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box flex flex-col items-center">
+                    <div class="text-xs text-gray-400 mb-2">保留</div>
+                    <canvas id="hold-canvas" width="80" height="80" class="bg-slate-950 border border-slate-800 rounded"></canvas>
+                </div>
+
+                <!-- 靈敏度設定 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box space-y-3">
+                    <div class="text-xs font-bold text-cyan-400 flex items-center gap-1">⚙️ 靈敏度設定</div>
+                    <div>
+                        <div class="flex justify-between text-[11px] text-gray-400 mb-1">
+                            <span>滑動延遲 (DAS)</span>
+                            <span id="das-val" class="text-cyan-400">100ms</span>
+                        </div>
+                        <input type="range" min="50" max="200" value="100" class="w-full accent-cyan-400 cursor-pointer" oninput="document.getElementById('das-val').innerText=this.value+'ms'">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] text-gray-400 mb-1">
+                            <span>滑動速度 (ARR)</span>
+                            <span id="arr-val" class="text-cyan-400">35ms</span>
+                        </div>
+                        <input type="range" min="10" max="100" value="35" class="w-full accent-cyan-400 cursor-pointer" oninput="document.getElementById('arr-val').innerText=this.value+'ms'">
+                    </div>
+                </div>
+
+                <!-- 音效風格設定 -->
+                <div class="bg-slate-900/90 p-3 rounded-xl glow-box space-y-2">
+                    <div class="text-xs font-bold text-purple-400">🎵 音效風格設定：</div>
+                    <select class="w-full bg-slate-800 text-xs text-white p-2 rounded-lg border border-slate-700 focus:outline-none">
+                        <option>經典 8-Bit 電子</option>
+                        <option>現代合成音效</option>
+                    </select>
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <span class="text-gray-400">啟用音效</span>
+                        <input type="checkbox" checked class="w-4 h-4 accent-cyan-400">
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col items-center justify-center space-y-4">
-                <div class="font-orbitron text-3xl font-black text-red-500 animate-pulse">VS</div>
-                <div class="text-xs text-gray-400 bg-slate-800/80 p-3 rounded-xl text-center space-y-1">
-                    <p>⬅️ ➡️ 左右移動</p>
-                    <p>⬆️ 旋轉方塊</p>
-                    <p>⬇️ 加速下落</p>
-                    <p>Space 直接落下</p>
+            <!-- 中間欄：遊戲主畫面與操作按鈕 -->
+            <div class="flex flex-col items-center gap-4">
+                <div class="bg-slate-900/90 p-4 rounded-2xl glow-box relative">
+                    <canvas id="my-board" width="200" height="400" class="bg-slate-950 border border-slate-800 rounded shadow-inner"></canvas>
                 </div>
-                <button onclick="leaveGame()" class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-xs font-bold rounded-lg transition">離開對戰</button>
+                <div class="flex gap-3 w-full">
+                    <button onclick="toggleGame()" id="main-action-btn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-500 font-bold rounded-xl shadow-lg transition text-sm">開始遊戲</button>
+                    <button onclick="leaveGame()" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold rounded-xl text-sm transition">離開</button>
+                </div>
             </div>
 
-            <!-- 其它玩家戰況動態預覽區 -->
-            <div class="bg-slate-900/90 p-4 rounded-2xl glow-box flex flex-col items-center max-h-[500px] overflow-y-auto">
-                <h3 class="font-bold text-red-400 mb-2">對手戰況</h3>
-                <div id="opponents-container" class="flex flex-col gap-4">
-                    <!-- 動態生成其他玩家的看板 -->
+            <!-- 右側欄：分數、按鍵綁定、線上排行榜 -->
+            <div class="flex flex-col gap-4 w-full md:w-64">
+                <!-- 分數 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box text-center">
+                    <div class="text-xs text-gray-400 mb-1">分數</div>
+                    <div id="my-score" class="font-orbitron text-2xl font-black text-cyan-400">0</div>
+                </div>
+
+                <!-- 按鍵綁定表 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box space-y-2 text-xs">
+                    <div class="font-bold text-cyan-400 mb-1">⌨️ 按鍵綁定</div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">左移動</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">方向鍵LEFT</span></div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">右移動</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">方向鍵RIGHT</span></div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">加速落</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">方向鍵DOWN</span></div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">順轉</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">方向鍵UP</span></div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">逆轉</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">X</span></div>
+                    <div class="flex justify-between py-1 border-b border-slate-800"><span class="text-gray-400">瞬落</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">SPACE</span></div>
+                    <div class="flex justify-between py-1"><span class="text-gray-400">保留</span><span class="bg-slate-800 px-2 py-0.5 rounded text-gray-300 font-mono">C / Z</span></div>
+                </div>
+
+                <!-- 排行榜 -->
+                <div class="bg-slate-900/90 p-4 rounded-xl glow-box space-y-2">
+                    <div class="text-xs font-bold text-amber-400">🏆 線上排行榜 (TOP 5)</div>
+                    <div id="leaderboard-list" class="text-xs text-gray-400 space-y-1">
+                        <div>1. PlayerA - <span class="text-white font-bold">12,400</span></div>
+                        <div>2. TetrisMaster - <span class="text-white font-bold">9,850</span></div>
+                        <div>3. BlockPro - <span class="text-white font-bold">7,200</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -123,29 +163,25 @@
 
     </main>
 
-    <footer class="w-full max-w-4xl text-center py-2 text-xs text-gray-500">
-        Tetris Battle P2P Engine &copy; 2026
+    <footer class="w-full max-w-5xl text-center py-2 text-xs text-gray-500">
+        Tetris Battle Engine &copy; 2026
     </footer>
 
     <script>
-        let peer = null;
-        let connections = []; // 儲存所有連線 (Host 用來管理多人)
-        let hostConnection = null; // Client 用來連向 Host
-        let isHost = false;
-        let roomCode = "";
+        let peer = null, conn = null, isHost = false, roomCode = "";
         let playerName = "玩家" + Math.floor(Math.random() * 900 + 100);
-        let maxPlayers = 2;
-        let playersInfo = {};
-
         document.getElementById('player-name-input').value = playerName;
 
         const COLS = 10, ROWS = 20, BLOCK_SIZE = 20;
         let canvas = document.getElementById('my-board');
         let ctx = canvas.getContext('2d');
-        let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        let holdCanvas = document.getElementById('hold-canvas');
+        let holdCtx = holdCanvas.getContext('2d');
 
+        let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
         let score = 0, lines = 0, gameOver = false, gameStarted = false;
         let dropInterval = 1000, dropCounter = 0, lastTime = 0;
+        let heldPiece = null, canHold = true;
 
         const SHAPES = [
             [],
@@ -157,22 +193,57 @@
             [[0,6,0],[6,6,6],[0,0,0]],
             [[7,7,0],[0,7,7],[0,0,0]]
         ];
-
         const COLORS = ['#000', '#06b6d4', '#3b82f6', '#f97316', '#eab308', '#22c55e', '#a855f7', '#ef4444'];
-        let player = { pos: { x: 0, y: 0 }, matrix: null, score: 0 };
+        let player = { pos: { x: 0, y: 0 }, matrix: null, type: 0 };
 
         function createPiece(type) { return SHAPES[type]; }
 
         function resetPlayer() {
             const pieces = '1234567';
-            const type = pieces[(Math.random() * pieces.length) | 0];
-            player.matrix = createPiece(Number(type));
+            const type = Number(pieces[(Math.random() * pieces.length) | 0]);
+            player.type = type;
+            player.matrix = createPiece(type);
             player.pos.y = 0;
             player.pos.x = ((COLS / 2) | 0) - ((player.matrix[0].length / 2) | 0);
+            canHold = true;
             if (checkCollision(board, player)) {
                 gameOver = true;
                 gameStarted = false;
+                document.getElementById('main-action-btn').innerText = "重新開始";
                 alert("遊戲結束！");
+            }
+        }
+
+        function holdPieceAction() {
+            if (!canHold) return;
+            if (!heldPiece) {
+                heldPiece = player.type;
+                resetPlayer();
+            } else {
+                let temp = player.type;
+                player.type = heldPiece;
+                heldPiece = temp;
+                player.matrix = createPiece(player.type);
+                player.pos.y = 0;
+                player.pos.x = ((COLS / 2) | 0) - ((player.matrix[0].length / 2) | 0);
+            }
+            canHold = false;
+            drawHold();
+        }
+
+        function drawHold() {
+            holdCtx.fillStyle = '#020617';
+            holdCtx.fillRect(0, 0, holdCanvas.width, holdCanvas.height);
+            if (heldPiece) {
+                const matrix = SHAPES[heldPiece];
+                matrix.forEach((row, r) => {
+                    row.forEach((val, c) => {
+                        if (val !== 0) {
+                            holdCtx.fillStyle = COLORS[val];
+                            holdCtx.fillRect(c * 16 + 10, r * 16 + 10, 15, 15);
+                        }
+                    });
+                });
             }
         }
 
@@ -193,9 +264,9 @@
 
         function mergeBoard(b, p) {
             p.matrix.forEach((row, r) => {
-                row.forEach((value, c) => {
-                    if (value !== 0 && p.pos.y + r >= 0) {
-                        b[p.pos.y + r][p.pos.x + c] = value;
+                row.forEach((val, c) => {
+                    if (val !== 0 && p.pos.y + r >= 0) {
+                        b[p.pos.y + r][p.pos.x + c] = val;
                     }
                 });
             });
@@ -216,33 +287,18 @@
                 lines += rowCount;
                 score += rowCount * 100 * rowCount;
                 document.getElementById('my-score').innerText = score;
-                document.getElementById('my-lines').innerText = lines;
-                if (rowCount >= 2) {
-                    sendGarbage(rowCount - 1);
-                }
-                sendState();
             }
         }
 
-        function addGarbageLines(num) {
-            for (let i = 0; i < num; i++) {
-                board.shift();
-                const garbageRow = Array(COLS).fill(8);
-                let hole = Math.floor(Math.random() * COLS);
-                garbageRow[hole] = 0;
-                board.push(garbageRow);
-            }
+        function rotate(matrix, clockwise = true) {
+            return clockwise ? matrix[0].map((_, i) => matrix.map(row => row[i])).reverse() : matrix[0].map((_, i) => matrix.map(row => row[matrix.length - 1 - i]));
         }
 
-        function rotate(matrix) {
-            return matrix[0].map((_, index) => matrix.map(row => row[index])).reverse();
-        }
-
-        function playerRotate() {
+        function playerRotate(clockwise = true) {
             const posX = player.pos.x;
             let offset = 1;
             const originalMatrix = player.matrix;
-            player.matrix = rotate(player.matrix);
+            player.matrix = rotate(player.matrix, clockwise);
             while (checkCollision(board, player)) {
                 player.pos.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
@@ -272,9 +328,9 @@
 
         function drawMatrix(matrix, offset, context) {
             matrix.forEach((row, r) => {
-                row.forEach((value, c) => {
-                    if (value !== 0) {
-                        context.fillStyle = value === 8 ? '#475569' : COLORS[value];
+                row.forEach((val, c) => {
+                    if (val !== 0) {
+                        context.fillStyle = COLORS[val];
                         context.fillRect((c + offset.x) * BLOCK_SIZE, (r + offset.y) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
                     }
                 });
@@ -298,263 +354,94 @@
             requestAnimationFrame(update);
         }
 
-        // 初始化 Peer 附帶重試與穩定設定
         function initPeer(customId = null) {
             playerName = document.getElementById('player-name-input').value || "玩家";
-            document.getElementById('lobby-status').innerText = "正在連線至伺服器...";
-            
-            peer = new Peer(customId, {
-                config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }] }
-            });
-
+            document.getElementById('my-name-display').innerText = playerName;
+            peer = new Peer(customId);
             peer.on('open', (id) => {
                 if (isHost) {
                     roomCode = id.substring(0, 6).toUpperCase();
                     document.getElementById('display-room-code').innerText = roomCode;
                     document.getElementById('lobby-screen').classList.add('hidden');
                     document.getElementById('waiting-room').classList.remove('hidden');
-                    
-                    playersInfo[peer.id] = { name: playerName, score: 0, board: Array.from({ length: ROWS }, () => Array(COLS).fill(0)) };
-                    updateMemberList();
+                    document.getElementById('member-list').innerText = `${playerName} (房主)`;
                 }
             });
-
-            peer.on('connection', (connection) => {
-                if (isHost) {
-                    if (connections.length >= maxPlayers - 1) {
-                        connection.on('open', () => {
-                            connection.send({ type: 'error', message: '房間已滿！' });
-                            setTimeout(() => connection.close(), 500);
-                        });
-                        return;
-                    }
-                    connections.push(connection);
-                    setupHostConnection(connection);
-                }
-            });
-
-            peer.on('error', (err) => {
-                console.error(err);
-                document.getElementById('lobby-status').innerText = "連線發生錯誤：" + err.type;
-            });
+            peer.on('connection', (connection) => { conn = connection; setupConnection(); });
         }
 
         function createRoom() {
             isHost = true;
-            maxPlayers = parseInt(document.getElementById('max-players-select').value);
-            const randomId = 'TB' + Math.random().toString(36).substring(2, 6).toUpperCase();
-            initPeer(randomId);
+            initPeer('TB' + Math.random().toString(36).substring(2, 6).toUpperCase());
         }
 
         function joinRoom() {
             isHost = false;
             const inputCode = document.getElementById('room-code-input').value.trim().toUpperCase();
-            if (!inputCode) { alert("請輸入房間代碼！"); return; }
+            if (!inputCode) { alert("請輸入房號！"); return; }
             playerName = document.getElementById('player-name-input').value || "玩家";
-            document.getElementById('lobby-status').innerText = "正在連線到房間...";
-
-            peer = new Peer({
-                config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }] }
-            });
-
-            peer.on('open', () => {
-                hostConnection = peer.connect(inputCode);
-                setupClientConnection(hostConnection);
-            });
-
-            peer.on('error', (err) => {
-                document.getElementById('lobby-status').innerText = "找不到房間或連線失敗";
-            });
+            document.getElementById('my-name-display').innerText = playerName;
+            peer = new Peer();
+            peer.on('open', () => { conn = peer.connect(inputCode); setupConnection(); });
         }
 
-        function setupHostConnection(conn) {
-            conn.on('open', () => {
-                conn.send({ type: 'welcome', maxPlayers: maxPlayers });
-            });
-            conn.on('data', (data) => {
-                if (data.type === 'join') {
-                    playersInfo[conn.peer] = { name: data.name, score: 0, board: Array.from({ length: ROWS }, () => Array(COLS).fill(0)) };
-                    updateMemberList();
-                    broadcast({ type: 'update_members', players: playersInfo });
-                    if (Object.keys(playersInfo).length >= maxPlayers) {
-                        document.getElementById('start-btn').classList.remove('hidden');
-                    }
-                } else if (data.type === 'state') {
-                    if (playersInfo[conn.peer]) {
-                        playersInfo[conn.peer].board = data.board;
-                        playersInfo[conn.peer].score = data.score;
-                    }
-                    broadcastExcept(conn.peer, data);
-                    updateOpponentsUI();
-                } else if (data.type === 'garbage') {
-                    // 轉發攻擊垃圾行給其他隨機玩家或特定對象
-                }
-            });
-            conn.on('close', () => {
-                delete playersInfo[conn.peer];
-                connections = connections.filter(c => c.peer !== conn.peer);
-                updateMemberList();
-                broadcast({ type: 'update_members', players: playersInfo });
-            });
-        }
-
-        function setupClientConnection(conn) {
+        function setupConnection() {
             conn.on('open', () => {
                 document.getElementById('lobby-screen').classList.add('hidden');
-                document.getElementById('waiting-room').classList.remove('hidden');
-                document.getElementById('display-room-code').innerText = conn.peer;
-                conn.send({ type: 'join', name: playerName });
+                document.getElementById('waiting-room').classList.add('hidden');
+                document.getElementById('game-arena').classList.remove('hidden');
+                startGameSession();
             });
             conn.on('data', (data) => {
-                if (data.type === 'error') {
-                    alert(data.message);
-                    location.reload();
-                } else if (data.type === 'update_members') {
-                    playersInfo = data.players;
-                    updateMemberList();
-                } else if (data.type === 'start') {
-                    startGameSession();
-                } else if (data.type === 'state' || data.type === 'opponents_state') {
-                    playersInfo = data.players || playersInfo;
-                    if(data.peer && playersInfo[data.peer]) {
-                        playersInfo[data.peer].board = data.board;
-                        playersInfo[data.peer].score = data.score;
-                    }
-                    updateOpponentsUI();
-                }
+                if (data.type === 'start') startGameSession();
             });
-            conn.on('close', () => {
-                alert("房主已斷線");
-                leaveGame();
-            });
-        }
-
-        function broadcast(data) {
-            connections.forEach(conn => {
-                if (conn.open) conn.send(data);
-            });
-        }
-
-        function broadcastExcept(peerId, data) {
-            connections.forEach(conn => {
-                if (conn.open && conn.peer !== peerId) conn.send(data);
-            });
-        }
-
-        function updateMemberList() {
-            const listEl = document.getElementById('member-list');
-            listEl.innerHTML = '';
-            Object.keys(playersInfo).forEach(id => {
-                const li = document.createElement('li');
-                li.innerText = `• ${playersInfo[id].name} ${id === peer.id ? '(我)' : ''}`;
-                listEl.appendChild(li);
-            });
-            if(isHost && Object.keys(playersInfo).length >= 2) {
-                document.getElementById('start-btn').classList.remove('hidden');
-            }
-        }
-
-        function copyRoomCode() {
-            const code = document.getElementById('display-room-code').innerText;
-            navigator.clipboard.writeText(code);
-            alert("已複製房間代碼：" + code);
         }
 
         function startMultiplayerGame() {
-            if (isHost) {
-                broadcast({ type: 'start', players: playersInfo });
-                startGameSession();
-            }
+            if (conn && conn.open) conn.send({ type: 'start' });
+            startGameSession();
         }
 
         function startGameSession() {
+            document.getElementById('lobby-screen').classList.add('hidden');
             document.getElementById('waiting-room').classList.add('hidden');
             document.getElementById('game-arena').classList.remove('hidden');
-            
-            // 動態產生對手畫布容器
-            const container = document.getElementById('opponents-container');
-            container.innerHTML = '';
-            Object.keys(playersInfo).forEach(id => {
-                if (id !== peer.id) {
-                    container.innerHTML += `
-                        <div class="flex flex-col items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
-                            <span class="text-xs text-gray-300 font-bold mb-1">${playersInfo[id].name}</span>
-                            <canvas id="opp-canvas-${id}" width="120" height="240" class="bg-black rounded"></canvas>
-                            <span class="text-[10px] text-gray-400 mt-1">分數: <strong id="opp-score-${id}" class="text-white">0</strong></span>
-                        </div>
-                    `;
-                }
-            });
-
             board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
-            score = 0; lines = 0; gameOver = false;
+            score = 0; lines = 0; gameOver = false; heldPiece = null;
             document.getElementById('my-score').innerText = 0;
-            document.getElementById('my-lines').innerText = 0;
+            drawHold();
             resetPlayer();
             gameStarted = true;
             lastTime = performance.now();
             requestAnimationFrame(update);
         }
 
-        function sendState() {
-            const payload = { type: 'state', peer: peer.id, board: board, score: score, players: playersInfo };
-            if (isHost) {
-                broadcast(payload);
-            } else if (hostConnection && hostConnection.open) {
-                hostConnection.send(payload);
+        function toggleGame() {
+            if (!gameStarted) {
+                startGameSession();
+                document.getElementById('main-action-btn').innerText = "暫停 (P)";
+            } else {
+                gameStarted = false;
+                document.getElementById('main-action-btn').innerText = "繼續遊戲";
             }
-        }
-
-        function sendGarbage(linesCount) {
-            const payload = { type: 'garbage', lines: linesCount };
-            if (isHost) {
-                broadcast(payload);
-            } else if (hostConnection && hostConnection.open) {
-                hostConnection.send(payload);
-            }
-        }
-
-        function updateOpponentsUI() {
-            Object.keys(playersInfo).forEach(id => {
-                if (id !== peer.id) {
-                    const canvasEl = document.getElementById(`opp-canvas-${id}`);
-                    const scoreEl = document.getElementById(`opp-score-${id}`);
-                    if (scoreEl) scoreEl.innerText = playersInfo[id].score;
-                    if (canvasEl) {
-                        const oCtx = canvasEl.getContext('2d');
-                        oCtx.fillStyle = '#020617';
-                        oCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
-                        const oppBoard = playersInfo[id].board;
-                        if (oppBoard) {
-                            oppBoard.forEach((row, r) => {
-                                row.forEach((val, c) => {
-                                    if (val !== 0) {
-                                        oCtx.fillStyle = val === 8 ? '#475569' : COLORS[val];
-                                        oCtx.fillRect(c * 12, r * 12, 11, 11);
-                                    }
-                                });
-                            });
-                        }
-                    }
-                }
-            });
         }
 
         function leaveGame() { location.reload(); }
 
         document.addEventListener('keydown', event => {
             if (!gameStarted || gameOver) return;
-            if (event.key === 'ArrowLeft') { playerMove(-1); sendState(); }
-            else if (event.key === 'ArrowRight') { playerMove(1); sendState(); }
-            else if (event.key === 'ArrowDown') { playerDrop(); sendState(); }
-            else if (event.key === 'ArrowUp') { playerRotate(); sendState(); }
+            if (event.key === 'ArrowLeft') playerMove(-1);
+            else if (event.key === 'ArrowRight') playerMove(1);
+            else if (event.key === 'ArrowDown') playerDrop();
+            else if (event.key === 'ArrowUp') playerRotate(true);
+            else if (event.key.toLowerCase() === 'x') playerRotate(true);
+            else if (event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'c') holdPieceAction();
             else if (event.key === ' ') {
                 while (!checkCollision(board, player)) { player.pos.y++; }
                 player.pos.y--;
                 mergeBoard(board, player);
                 clearLines();
                 resetPlayer();
-                sendState();
             }
         });
     </script>
